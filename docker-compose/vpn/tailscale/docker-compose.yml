@@ -1,0 +1,25 @@
+version: "3.7"
+
+secrets:
+  TAILSCALE_KEY:
+    file: ./secrets/tailscale_key.txt
+
+services:
+  tailscale-s12:
+    image: tailscale/tailscale:latest
+    container_name: tailscale-s12
+    hostname: tailscale-s12
+    secrets:
+      - TAILSCALE_KEY
+    environment:
+      TS_AUTHKEY: /run/secrets/TAILSCALE_KEY
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_EXTRA_ARGS: --advertise-routes=192.168.100.0/24 --accept-routes
+      TS_USERSPACE: false
+    volumes:
+      - ./ts-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped

@@ -1,0 +1,35 @@
+secrets:
+  WEB_PWD:
+    file: ./pihole_password.txt
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    hostname: pihole
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    #  - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+      - "8080:80/tcp"
+      - "853:853/tcp" # DNS-over-TLS
+    environment:
+      TZ: 'America/Mexico_City'
+      WEBPASSWORD_FILE: /run/secrets/WEB_PWD
+      IPv6: 'false'
+      FTLCONF_LOCAL_IPV4: 192.168.100.60/32
+    #  PROXY_LOCATION: pihole
+      VIRTUAL_HOST: pihole.lan
+      VIRTUAL_PORT: 8080
+      CUSTOM_CACHE_SIZE: 5000
+    # Volumes store your data between container upgrades
+    volumes:
+      - ./etc-pihole:/etc/pihole
+      - ./etc-dnsmasq.d:/etc/dnsmasq.d
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    #cap_add:
+    #  - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+    secrets:
+      - WEB_PWD
+    restart: unless-stopped

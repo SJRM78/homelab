@@ -1,0 +1,23 @@
+name: immich
+
+services:
+  pgbackups:
+    container_name: immich_db_dumper
+    image: prodrigestivill/postgres-backup-local:14
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: immich_postgres
+      POSTGRES_CLUSTER: 'TRUE'
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE_NAME}
+      SCHEDULE: "@daily"
+      POSTGRES_EXTRA_OPTS: '-Z9 --clean --if-exists'
+      BACKUP_DIR: /db_dumps
+      BACKUP_ON_START: 'TRUE'
+      BACKUP_KEEP_DAYS: 14
+      TZ: 'America/Mexico_City'
+    volumes:
+      - ./db_dumps:/db_dumps

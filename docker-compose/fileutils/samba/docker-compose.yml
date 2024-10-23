@@ -1,0 +1,45 @@
+---
+secrets:
+  USR_PWD:
+    file: ./samba_password.txt
+
+services:
+  samba:
+    image: ghcr.io/servercontainers/samba:latest
+    container_name: samba
+    restart: unless-stopped
+    # note that this network_mode makes it super easy (especially for zeroconf) but is not as safe as exposing ports directly
+    # more about that here: https://book.hacktricks.xyz/linux-hardening/privilege-escalation/docker-security/docker-breakout-privilege-escalation#hostnetwork
+    #network_mode: host
+    cap_add:
+      - CAP_NET_ADMIN
+    environment:
+      SAMBA_CONF_LOG_LEVEL: 3
+      GROUP_data: 100000
+      ACCOUNT_data: /run/secrets/USR_PWD
+      UID_data: 100000
+      GROUPS_data: data
+      SAMBA_VOLUME_CONFIG_datas12: |
+        [datas12]
+         path=/shares/data
+         available = yes
+         browsable = yes
+         writable = yes
+         read only = no
+         create mask = 0775
+         valid users = data
+         public = yes
+         guest ok = no
+
+      # uncomment to disable optional services
+      #WSDD2_DISABLE: 1
+      AVAHI_DISABLE: 1
+      #NETBIOS_DISABLE: 1
+
+    volumes:
+      - /data:/shares/data
+    secrets:
+      - USR_PWD
+    ports:
+      - 445:445
+      - 3702:3702

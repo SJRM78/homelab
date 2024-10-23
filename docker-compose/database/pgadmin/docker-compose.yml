@@ -1,0 +1,23 @@
+name: immich
+
+secrets:
+  PGADMIN_EMAIL:
+    file: ./secrets/pgadmin_email.txt
+  PGADMIN_PASSWORD:
+    file: ./secrets/pgadmin_password.txt
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "8888:80"
+    secrets:
+      - PGADMIN_EMAIL
+      - PGADMIN_PASSWORD
+    environment:
+      PGADMIN_DEFAULT_EMAIL: /run/secrets/PGADMIN_EMAIL
+      PGADMIN_DEFAULT_PASSWORD: /run/secrets/PGADMIN_PASSWORD
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
