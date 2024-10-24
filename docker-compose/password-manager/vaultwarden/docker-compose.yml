@@ -1,14 +1,63 @@
 name : vaultwarden
 
+secrets:
+  DATABASE_URL:
+    file: ./secrets/database_url.txt
+  PUSH_INSTALLATION_ID:
+    file: ./secrets/push_id.txt
+  PUSH_INSTALLATION_KEY:
+    file: ./secrets/push_key.txt
+  ADMIN_TOKEN:
+    file: ./secrets/admin_token.txt
+  SMTP_PASSWORD:
+    file: ./secrets/smtp_password.txt
+  POSTGRES_PASSWORD:
+    file: ./secrets/postgres_password.txt
+
 services:
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     restart: always
+    secrets:
+      - DATABASE_URL
+      - PUSH_INSTALLATION_ID
+      - PUSH_INSTALLATION_KEY
+      - ADMIN_TOKEN
+      - SMTP_PASSWORD
     environment:
+      DATABASE_URL: /run/secrets/DATABASE_URL
+      PUSH_INSTALLATION_ID: /run/secrets/PUSH_INSTALLATION_ID
+      PUSH_INSTALLATION_KEY: /run/secrets/PUSH_INSTALLATION_KEY
+      ADMIN_TOKEN: /run/secrets/ADMIN_TOKEN
+      SMTP_PASSWORD: /run/secrets/SMTP_PASSWORD
       DOMAIN: "https://vaultwarden.example.com"  # required when using a reverse proxy; your domain; vaultwarden needs to know it's https to work properly with attachments
       SIGNUPS_ALLOWED: "true" # Deactivate this with "false" after you have created your account so that no strangers can register
     volumes:
       - ./vw-data:/data # the path before the : can be changed
     ports:
-      - 8080:80 # you can replace the 11001 with your preferred port
+      - 80:80 # you can replace the 11001 with your preferred port
+    depends_on:
+      - postgresdb
+
+  postgresdb:
+    image: postgres:15
+    restart: always
+    secrets:
+      - POSTGRES_PASSWORD
+    environment:
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_USER: root
+      POSTGRES_DB: vaultwarden
+    ports:
+      - "5432:5432"
+    volumes:
+     - ./pg_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgresdb
